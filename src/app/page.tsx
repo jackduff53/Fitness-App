@@ -70,15 +70,20 @@ export default function Dashboard() {
   const stepsSparkline = recentSummaries.map(s => s.stepCount);
   const hrSparkline = recentSummaries.map(s => s.restingHeartRate || 0).filter(v => v > 0);
 
+  const [authError, setAuthError] = useState<string | null>(null);
+
   async function handleConnectStrava() {
+    setAuthError(null);
     try {
       const res = await fetch("/api/garmin/auth", { method: "POST" });
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
+      } else {
+        setAuthError(data.error || "Failed to get authorization URL");
       }
-    } catch {
-      // fallback
+    } catch (err) {
+      setAuthError("Network error — check your connection");
     }
   }
 
@@ -89,6 +94,7 @@ export default function Dashboard() {
         <button onClick={handleConnectStrava} className="bg-accent text-background font-semibold px-6 py-3 rounded-xl">
           Connect Strava
         </button>
+        {authError && <p className="text-red-400 text-xs text-center">{authError}</p>}
       </div>
     );
   }
