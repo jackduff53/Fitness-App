@@ -1,66 +1,94 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Garmin OAuth 1.0a flow
-// In production, this would handle full OAuth token exchange
-// For now, provides the structure for auth initiation and callback
+// Strava OAuth2 flow (replacing Garmin)
+const STRAVA_CLIENT_ID = process.env.STRAVA_CLIENT_ID || "";
+const STRAVA_CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET || "";
+const STRAVA_REDIRECT_URI = process.env.NEXT_PUBLIC_APP_URL
+  ? `${process.env.NEXT_PUBLIC_APP_URL}/api/garmin/auth`
+  : "http://localhost:3000/api/garmin/auth";
 
-const GARMIN_CONSUMER_KEY = process.env.GARMIN_CONSUMER_KEY || "";
-const GARMIN_CONSUMER_SECRET = process.env.GARMIN_CONSUMER_SECRET || "";
-
-export async function POST(request: NextRequest) {
-  try {
-    if (!GARMIN_CONSUMER_KEY || !GARMIN_CONSUMER_SECRET) {
-      return NextResponse.json(
-        { error: "Garmin OAuth credentials not configured" },
-        { status: 500 }
-      );
-    }
-
-    // In production: initiate OAuth 1.0a request token flow
-    // 1. Request a request token from Garmin
-    // 2. Return the authorization URL for the user to approve
-    const authUrl = `https://connect.garmin.com/oauthConfirm?oauth_token=placeholder`;
-
-    return NextResponse.json({ url: authUrl });
-  } catch (error) {
-    console.error("Garmin auth error:", error);
+// POST: Initiate OAuth flow — return the Strava authorization URL
+export async function POST() {
+  if (!STRAVA_CLIENT_ID) {
     return NextResponse.json(
-      { error: "Failed to initiate Garmin authentication" },
+      { error: "Strava client ID not configured" },
       { status: 500 }
     );
   }
+
+  const authUrl = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&redirect_uri=${encodeURIComponent(STRAVA_REDIRECT_URI)}&response_type=code&scope=activity:read_all,read&approval_prompt=auto`;
+
+  return NextResponse.json({ url: authUrl });
 }
 
+// GET: OAuth callback — exchange code for access token
 export async function GET(request: NextRequest) {
   try {
-    // OAuth callback handler
     const { searchParams } = new URL(request.url);
-    const oauthToken = searchParams.get("oauth_token");
-    const oauthVerifier = searchParams.get("oauth_verifier");
+    const code = searchParams.get("code");
+    const error = searchParams.get("error");
 
-    if (!oauthToken || !oauthVerifier) {
+    if (error) {
+      // User denied access
+      const baseUrl = new URL("/", request.url).origin;
+      return NextResponse.redirect(`${baseUrl}?auth_error=denied`);
+    }
+
+    if (!code) {
       return NextResponse.json(
-        { error: "Missing OAuth parameters" },
+        { error: "Missing authorization code" },
         { status: 400 }
       );
     }
 
-    // In production: exchange request token + verifier for access token
-    // Store access token in HTTP-only cookie
-    const response = NextResponse.redirect(new URL("/", request.url));
-    response.cookies.set("garmin_token", "placeholder_access_token", {
+    // Exchange code for access token
+    const tokenResponse = await fetch("https://www.strava.com/oauth/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        client_id: STRAVA_CLIENT_ID,
+        client_secret: STRAVA_CLIENT_SECRET,
+        code,
+        grant_type: "authorization_code",
+      }),
+    });
+
+    if (!tokenResponse.ok) {
+      const baseUrl = new URL("/", request.url).origin;
+      return NextResponse.redirect(`${baseUrl}?auth_error=token_failed`);
+    }
+
+    const tokenData = await tokenResponse.json();
+
+    // Store tokens in HTTP-only cookies
+    const baseUrl = new URL("/", request.url).origin;
+    const response = NextResponse.redirect(baseUrl);
+
+    response.cookies.set("strava_access_token", tokenData.access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: tokenData.expires_in || 21600, // ~6 hours
+    });
+
+    response.cookies.set("strava_refresh_token", tokenData.refresh_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 365, // 1 year
     });
 
+    response.cookies.set("strava_expires_at", String(tokenData.expires_at), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+
     return response;
   } catch (error) {
-    console.error("Garmin auth callback error:", error);
-    return NextResponse.json(
-      { error: "Failed to complete Garmin authentication" },
-      { status: 500 }
-    );
+    console.error("Strava auth callback error:", error);
+    const baseUrl = new URL("/", request.url).origin;
+    return NextResponse.redirect(`${baseUrl}?auth_error=unknown`);
   }
 }
