@@ -70,12 +70,24 @@ export default function Dashboard() {
   const stepsSparkline = recentSummaries.map(s => s.stepCount);
   const hrSparkline = recentSummaries.map(s => s.restingHeartRate || 0).filter(v => v > 0);
 
+  async function handleConnectStrava() {
+    try {
+      const res = await fetch("/api/garmin/auth", { method: "POST" });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch {
+      // fallback
+    }
+  }
+
   if (error === "auth") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <p className="text-text-secondary text-center">Connect your Garmin account to see your activity data</p>
-        <button onClick={() => window.location.href = "/api/garmin/auth"} className="bg-accent text-background font-semibold px-6 py-3 rounded-xl">
-          Connect Garmin
+        <p className="text-text-secondary text-center">Connect your Strava account to see your activity data</p>
+        <button onClick={handleConnectStrava} className="bg-accent text-background font-semibold px-6 py-3 rounded-xl">
+          Connect Strava
         </button>
       </div>
     );
