@@ -123,9 +123,6 @@ export default function Dashboard() {
         <ProgressRing current={caloriesBurned} goal={burnGoal} label="Calories Burned" />
       </div>
 
-      {/* 2. Workout Recommendation */}
-      <WorkoutRecommendationCard recommendation={recommendation} />
-
       {/* 3. Calories Consumed vs Goal */}
       <div className="flex justify-center relative">
         <ProgressRing current={nutrition.totalCalories} goal={calorieTarget} label="Calories Consumed" />
@@ -143,7 +140,7 @@ export default function Dashboard() {
       >
         {hrSparkline.length > 0 && (
           <div className="mt-2">
-            <SparklineChart data={hrSparkline} label="7-day HR" color="#33FFE0" />
+            <SparklineChart data={hrSparkline} label="7-day HR" color="#FF6B00" />
           </div>
         )}
       </MetricCard>
@@ -164,6 +161,9 @@ export default function Dashboard() {
 
       {/* 9. Streak Counters */}
       <StreakCounter burnStreak={burnStreak} intakeStreak={intakeStreak} />
+
+      {/* 10. Recommended Workout — full section at bottom */}
+      <WorkoutRecommendationCard recommendation={recommendation} />
     </div>
   );
 }
