@@ -90,45 +90,54 @@ export async function GET(request: NextRequest) {
 }
 
 async function fetchStravaData(accessToken: string): Promise<GarminDailyData> {
-  // Get activities from past 7 days (not just today) so recent workouts show up
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  sevenDaysAgo.setHours(0, 0, 0, 0);
-  const after = Math.floor(sevenDaysAgo.getTime() / 1000);
+  // Get all activities from June 25th onward
+  const startDate = new Date("2025-06-25T00:00:00Z");
+  const after = Math.floor(startDate.getTime() / 1000);
 
-  // Also calculate today's start for filtering today-only calories
+  // Today's start for filtering today-only calories
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const todayStart = Math.floor(today.getTime() / 1000);
 
-  const activitiesRes = await fetch(
-    `https://www.strava.com/api/v3/athlete/activities?after=${after}&per_page=50`,
-    { headers: { Authorization: `Bearer ${accessToken}` } }
-  );
+  // Strava paginates at 200 max per page — fetch all pages
+  let allActivities: any[] = [];
+  let page = 1;
+  let hasMore = true;
 
-  let workouts: GarminDailyData["workouts"] = [];
-  let totalCaloriesBurned = 0;
+  while (hasMore) {
+    const activitiesRes = await fetch(
+      `https://www.strava.com/api/v3/athlete/activities?after=${after}&per_page=200&page=${page}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
 
-  if (activitiesRes.ok) {
+    if (!activitiesRes.ok) break;
+
     const activities = await activitiesRes.json();
-    
-    // All activities from past 7 days (for display)
-    workouts = activities.map((a: any) => {
-      const caloriesBurned = estimateActivityCalories(a);
-      return {
-        type: a.type || a.sport_type || "Unknown",
-        durationMinutes: Math.round((a.moving_time || 0) / 60),
-        caloriesBurned,
-      };
-    });
-
-    // Only count today's activities for the burn total
-    const todayActivities = activities.filter((a: any) => {
-      const activityTime = new Date(a.start_date).getTime() / 1000;
-      return activityTime >= todayStart;
-    });
-    totalCaloriesBurned = todayActivities.reduce((sum: number, a: any) => sum + estimateActivityCalories(a), 0);
+    if (activities.length === 0) {
+      hasMore = false;
+    } else {
+      allActivities = [...allActivities, ...activities];
+      page++;
+      if (activities.length < 200) hasMore = false;
+    }
   }
+
+  // All activities from June 25th onward
+  const workouts: GarminDailyData["workouts"] = allActivities.map((a: any) => {
+    const caloriesBurned = estimateActivityCalories(a);
+    return {
+      type: a.type || a.sport_type || "Unknown",
+      durationMinutes: Math.round((a.moving_time || 0) / 60),
+      caloriesBurned,
+    };
+  });
+
+  // Only count today's activities for the burn total
+  const todayActivities = allActivities.filter((a: any) => {
+    const activityTime = new Date(a.start_date).getTime() / 1000;
+    return activityTime >= todayStart;
+  });
+  const totalCaloriesBurned = todayActivities.reduce((sum: number, a: any) => sum + estimateActivityCalories(a), 0);
 
   return {
     steps: 0,
