@@ -7,23 +7,30 @@ interface WorkoutCardProps {
 export function WorkoutCard({ workouts }: WorkoutCardProps) {
   if (workouts.length === 0) {
     return (
-      <div className="bg-card rounded-xl p-4">
-        <h3 className="text-sm text-text-secondary mb-2">Today&apos;s Workouts</h3>
-        <p className="text-text-secondary text-sm">No workouts logged today</p>
+      <div className="gradient-card rounded-2xl p-5">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-3">Today&apos;s Workouts</p>
+        <p className="text-sm text-text-secondary italic">No workouts logged yet</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-card rounded-xl p-4">
-      <h3 className="text-sm text-text-secondary mb-3">Today&apos;s Workouts</h3>
+    <div className="gradient-card rounded-2xl p-5">
+      <p className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-3">Today&apos;s Workouts</p>
       <div className="space-y-2">
         {workouts.map((workout, i) => (
-          <div key={i} className="flex justify-between items-center bg-background rounded-lg p-3">
-            <span className="text-text-primary text-sm">{workout.type}</span>
-            <div className="flex gap-3">
-              <span className="text-text-secondary text-sm">{workout.durationMinutes} min</span>
-              <span className="text-accent text-sm">{workout.caloriesBurned} cal</span>
+          <div key={i} className="flex justify-between items-center bg-black/30 rounded-xl p-3 border border-white/5">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                <span className="text-accent text-sm">
+                  {workout.type === "Run" ? "🏃" : workout.type === "Ride" ? "🚴" : workout.type === "Swim" ? "🏊" : "💪"}
+                </span>
+              </div>
+              <span className="text-sm text-white font-medium">{workout.type}</span>
+            </div>
+            <div className="flex gap-4 text-right">
+              <span className="text-sm text-text-secondary">{workout.durationMinutes}m</span>
+              <span className="text-sm font-semibold text-accent">{workout.caloriesBurned} cal</span>
             </div>
           </div>
         ))}

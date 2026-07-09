@@ -8,15 +8,15 @@ export function WorkoutRecommendationCard({ recommendation }: WorkoutRecommendat
   const isCardio = recommendation === "cardio";
 
   return (
-    <div className="bg-card rounded-xl p-4 border border-accent/20">
-      <h3 className="text-sm text-text-secondary mb-1">Recommended Workout</h3>
-      <p className="text-lg font-semibold text-text-primary">
+    <div className="glow-orange gradient-card rounded-2xl p-5 border border-accent/20">
+      <p className="text-xs font-medium text-accent uppercase tracking-wider mb-2">Today&apos;s Focus</p>
+      <p className="text-xl font-bold text-white">
         {isCardio ? "🏃 Cardio Workout" : "💪 Recovery & Strength"}
       </p>
-      <p className="text-sm text-text-secondary mt-1">
+      <p className="text-sm text-text-secondary mt-2 leading-relaxed">
         {isCardio
-          ? "You're below your burn goal. Try a run, bike ride, or brisk walk."
-          : "Great job hitting your burn goal! Focus on stretching or light strength training."}
+          ? "You're below your burn goal. Try a run, bike ride, or brisk walk to close the gap."
+          : "You've hit your burn goal! Focus on stretching, mobility, or light strength training."}
       </p>
     </div>
   );

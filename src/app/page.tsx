@@ -102,13 +102,13 @@ export default function Dashboard() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-xl font-bold">Dashboard</h1>
+        <h1 className="text-2xl font-black tracking-tight">Dashboard</h1>
         <button
           onClick={refresh}
           disabled={isLoading}
-          className="text-xs text-accent disabled:opacity-40"
+          className="text-xs font-medium text-accent bg-accent/10 px-3 py-1.5 rounded-lg border border-accent/20 disabled:opacity-40 transition-all hover:bg-accent/20"
         >
-          {isLoading ? "Syncing..." : "↻ Refresh"}
+          {isLoading ? "⟳ Syncing" : "↻ Sync"}
         </button>
       </div>
 
@@ -132,12 +132,13 @@ export default function Dashboard() {
       </div>
 
       {/* 4. Steps */}
-      <MetricCard title="Steps" value={steps.toLocaleString()} />
+      <MetricCard title="Steps" value={steps.toLocaleString()} icon="👟" />
 
       {/* 5. Resting Heart Rate */}
       <MetricCard
         title="Resting Heart Rate"
         value={restingHR ? `${restingHR} bpm` : "—"}
+        icon="💓"
         subtitle={restingHR ? undefined : "Data unavailable"}
       >
         {hrSparkline.length > 0 && (
@@ -154,8 +155,8 @@ export default function Dashboard() {
       <HeartHealthCard score={heartScore} color={scoreColor} unhealthyFoods={nutrition.unhealthyFoodNames} />
 
       {/* 8. Weekly Trends */}
-      <div className="bg-card rounded-xl p-4 space-y-3">
-        <h3 className="text-sm text-text-secondary">Weekly Trends</h3>
+      <div className="gradient-card rounded-2xl p-5 space-y-4">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">Weekly Trends</p>
         <SparklineChart data={burnedSparkline} label="Calories Burned" />
         <SparklineChart data={consumedSparkline} label="Calories Consumed" />
         <SparklineChart data={stepsSparkline} label="Steps" />

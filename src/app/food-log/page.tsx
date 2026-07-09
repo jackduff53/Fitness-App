@@ -44,8 +44,9 @@ export default function FoodLogPage() {
     try {
       const result = await parseFoodDescription(description);
       setParsedResult(result);
-    } catch (err) {
-      setError("Failed to parse food. You can enter it manually.");
+    } catch (err: any) {
+      const msg = err?.message || "Unknown error";
+      setError(`Failed to parse food: ${msg}`);
       setShowManual(true);
     } finally {
       setIsLoading(false);
