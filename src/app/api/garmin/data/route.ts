@@ -105,20 +105,56 @@ async function fetchStravaData(accessToken: string): Promise<GarminDailyData> {
 
   if (activitiesRes.ok) {
     const activities = await activitiesRes.json();
-    workouts = activities.map((a: any) => ({
-      type: a.type || a.sport_type || "Unknown",
-      durationMinutes: Math.round((a.moving_time || 0) / 60),
-      caloriesBurned: Math.round(a.calories || a.kilojoules / 4.184 || 0),
-    }));
+    workouts = activities.map((a: any) => {
+      // Estimate calories using MET-based calculation
+      const caloriesBurned = estimateActivityCalories(a);
+      return {
+        type: a.type || a.sport_type || "Unknown",
+        durationMinutes: Math.round((a.moving_time || 0) / 60),
+        caloriesBurned,
+      };
+    });
     totalCaloriesBurned = workouts.reduce((sum, w) => sum + w.caloriesBurned, 0);
   }
 
-  // Strava doesn't provide daily steps or resting HR directly
-  // These will need to be manually entered or estimated
   return {
     steps: 0, // User enters manually
     activeCaloriesBurned: totalCaloriesBurned,
     workouts,
-    restingHeartRate: null, // Not available from Strava activity API
+    restingHeartRate: null,
   };
+}
+
+/**
+ * Estimates calories for a single Strava activity using MET values.
+ * Uses kilojoules from Strava if available (cycling), otherwise MET × weight × duration.
+ */
+function estimateActivityCalories(activity: any): number {
+  const DEFAULT_WEIGHT_KG = 80;
+  
+  // If Strava provides kilojoules (cycling with power meter)
+  if (activity.kilojoules && activity.kilojoules > 0) {
+    return Math.round(activity.kilojoules);
+  }
+
+  const MET_VALUES: Record<string, number> = {
+    Run: 9.8, Ride: 7.5, Swim: 8.0, Walk: 3.8, Hike: 6.0,
+    WeightTraining: 5.0, Crossfit: 8.0, Yoga: 3.0, Rowing: 7.0,
+    Elliptical: 5.0, StairStepper: 9.0, NordicSki: 8.0, Trail: 10.0,
+    VirtualRide: 6.5, VirtualRun: 9.8, EBikeRide: 4.0, Workout: 5.0,
+  };
+
+  const type = activity.sport_type || activity.type || "Workout";
+  const met = MET_VALUES[type] || 5.0;
+  const durationHours = (activity.moving_time || 0) / 3600;
+  let calories = met * DEFAULT_WEIGHT_KG * durationHours;
+
+  // Heart rate adjustment
+  if (activity.average_heartrate) {
+    if (activity.average_heartrate > 150) calories *= 1.15;
+    else if (activity.average_heartrate > 130) calories *= 1.05;
+    else if (activity.average_heartrate < 100) calories *= 0.85;
+  }
+
+  return Math.round(calories);
 }

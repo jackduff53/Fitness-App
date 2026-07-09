@@ -6,11 +6,11 @@
  */
 
 export const colors = {
-  background: "#0A0D1A",
-  card: "#141A29",
-  accent: "#33FFE0",
+  background: "#000000",
+  card: "#111111",
+  accent: "#FF6B00",
   textPrimary: "#FFFFFF",
-  textSecondary: "#9CA3AF",
+  textSecondary: "#8A8A8A",
 } as const;
 
 export type ThemeColor = keyof typeof colors;

@@ -7,7 +7,7 @@ interface SparklineChartProps {
   color?: string;
 }
 
-export function SparklineChart({ data, label, height = 40, color = "#33FFE0" }: SparklineChartProps) {
+export function SparklineChart({ data, label, height = 40, color = "#FF6B00" }: SparklineChartProps) {
   if (data.length === 0) {
     return (
       <div className="flex flex-col gap-1">

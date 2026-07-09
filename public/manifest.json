@@ -3,8 +3,8 @@
   "short_name": "FitTrack",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0A0D1A",
-  "theme_color": "#33FFE0",
+  "background_color": "#000000",
+  "theme_color": "#FF6B00",
   "icons": [
     {
       "src": "/icons/icon-192.png",

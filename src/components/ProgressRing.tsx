@@ -23,7 +23,7 @@ export function ProgressRing({ current, goal, label, unit = "cal", size = 160 }:
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="#141A29"
+          stroke="#1A1A1A"
           strokeWidth={strokeWidth}
         />
         <circle
@@ -31,7 +31,7 @@ export function ProgressRing({ current, goal, label, unit = "cal", size = 160 }:
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="#33FFE0"
+          stroke="#FF6B00"
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
