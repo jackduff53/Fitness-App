@@ -161,9 +161,6 @@ export default function Dashboard() {
 
       {/* 9. Streak Counters */}
       <StreakCounter burnStreak={burnStreak} intakeStreak={intakeStreak} />
-
-      {/* 10. Recommended Workout — full section at bottom */}
-      <WorkoutRecommendationCard recommendation={recommendation} />
     </div>
   );
 }
