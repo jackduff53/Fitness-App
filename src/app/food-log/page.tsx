@@ -41,13 +41,13 @@ export default function FoodLogPage() {
   async function handleSubmit(description: string) {
     setIsLoading(true);
     setError(null);
+    setShowManual(false);
     try {
       const result = await parseFoodDescription(description);
       setParsedResult(result);
     } catch (err: any) {
       const msg = err?.message || "Unknown error";
-      setError(`Failed to parse food: ${msg}`);
-      setShowManual(true);
+      setError(`AI parsing failed: ${msg}`);
     } finally {
       setIsLoading(false);
     }
@@ -82,7 +82,15 @@ export default function FoodLogPage() {
       <FoodEntryForm onSubmit={handleSubmit} isLoading={isLoading} isOffline={isOffline} />
 
       {error && (
-        <p className="text-xs text-red-400 bg-red-900/20 rounded-lg p-2">{error}</p>
+        <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-3">
+          <p className="text-xs text-red-400">{error}</p>
+          <button 
+            onClick={() => { setShowManual(true); setError(null); }}
+            className="text-xs text-accent mt-2 underline"
+          >
+            Enter manually instead
+          </button>
+        </div>
       )}
 
       {parsedResult && (
