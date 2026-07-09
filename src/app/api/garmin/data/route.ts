@@ -90,13 +90,19 @@ export async function GET(request: NextRequest) {
 }
 
 async function fetchStravaData(accessToken: string): Promise<GarminDailyData> {
-  // Get today's activities from Strava
+  // Get activities from past 7 days (not just today) so recent workouts show up
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+  const after = Math.floor(sevenDaysAgo.getTime() / 1000);
+
+  // Also calculate today's start for filtering today-only calories
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const after = Math.floor(today.getTime() / 1000);
+  const todayStart = Math.floor(today.getTime() / 1000);
 
   const activitiesRes = await fetch(
-    `https://www.strava.com/api/v3/athlete/activities?after=${after}&per_page=30`,
+    `https://www.strava.com/api/v3/athlete/activities?after=${after}&per_page=50`,
     { headers: { Authorization: `Bearer ${accessToken}` } }
   );
 
@@ -105,8 +111,9 @@ async function fetchStravaData(accessToken: string): Promise<GarminDailyData> {
 
   if (activitiesRes.ok) {
     const activities = await activitiesRes.json();
+    
+    // All activities from past 7 days (for display)
     workouts = activities.map((a: any) => {
-      // Estimate calories using MET-based calculation
       const caloriesBurned = estimateActivityCalories(a);
       return {
         type: a.type || a.sport_type || "Unknown",
@@ -114,11 +121,17 @@ async function fetchStravaData(accessToken: string): Promise<GarminDailyData> {
         caloriesBurned,
       };
     });
-    totalCaloriesBurned = workouts.reduce((sum, w) => sum + w.caloriesBurned, 0);
+
+    // Only count today's activities for the burn total
+    const todayActivities = activities.filter((a: any) => {
+      const activityTime = new Date(a.start_date).getTime() / 1000;
+      return activityTime >= todayStart;
+    });
+    totalCaloriesBurned = todayActivities.reduce((sum: number, a: any) => sum + estimateActivityCalories(a), 0);
   }
 
   return {
-    steps: 0, // User enters manually
+    steps: 0,
     activeCaloriesBurned: totalCaloriesBurned,
     workouts,
     restingHeartRate: null,
