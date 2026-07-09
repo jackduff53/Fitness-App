@@ -32,7 +32,7 @@ const MET_VALUES: Record<string, number> = {
 };
 
 const DEFAULT_MET = 5.0;
-const DEFAULT_WEIGHT_KG = 80;
+const DEFAULT_WEIGHT_KG = 95; // 210 lbs, 5'10" male
 
 interface StravaActivity {
   type: string;

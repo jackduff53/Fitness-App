@@ -129,6 +129,7 @@ async function fetchStravaData(accessToken: string): Promise<GarminDailyData> {
       type: a.type || a.sport_type || "Unknown",
       durationMinutes: Math.round((a.moving_time || 0) / 60),
       caloriesBurned,
+      date: a.start_date_local ? a.start_date_local.split("T")[0] : new Date(a.start_date).toISOString().split("T")[0],
     };
   });
 
@@ -152,7 +153,7 @@ async function fetchStravaData(accessToken: string): Promise<GarminDailyData> {
  * Uses kilojoules from Strava if available (cycling), otherwise MET × weight × duration.
  */
 function estimateActivityCalories(activity: any): number {
-  const DEFAULT_WEIGHT_KG = 80;
+  const DEFAULT_WEIGHT_KG = 95; // 210 lbs, 5'10" male
   
   // If Strava provides kilojoules (cycling with power meter)
   if (activity.kilojoules && activity.kilojoules > 0) {

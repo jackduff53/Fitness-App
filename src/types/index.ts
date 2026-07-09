@@ -25,6 +25,7 @@ export interface Workout {
   type: string;              // e.g., "Running", "Cycling", "Strength"
   durationMinutes: number;
   caloriesBurned: number;
+  date: string;              // ISO date string "YYYY-MM-DD"
 }
 
 export interface DailySummary {
