@@ -1,28 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const SYSTEM_PROMPT = `You are a fitness coach creating a personalized weekly workout plan. The user is a 210 lb, 5'10" male who wants a healthy mix of weight training and running days, emphasizing heart healthiness.
+const SYSTEM_PROMPT = `You are an expert fitness coach creating a detailed, prescriptive weekly workout plan. The user is a 210 lb, 5'10" male who wants a healthy mix of weight training and running, emphasizing heart health.
 
-Based on their previous week's activity data, create an adaptive plan for the upcoming week (Sunday to Saturday).
+Based on their previous week's activity data, create a specific, actionable plan for the upcoming week (Sunday to Saturday).
 
 Rules:
+- Be EXTREMELY specific: exact exercises, sets, reps, weight percentages, run distances, paces, and durations
+- For strength days: list every exercise with sets × reps (e.g., "Barbell Bench Press: 4×8 @ moderate weight")
+- For run days: specify distance in miles, target pace, heart rate zone, and intervals if applicable
+- For recovery days: specific stretches or mobility drills with hold times
+- Include warm-up and cool-down instructions
 - If they ran a lot last week, add more strength or recovery
-- If they skipped cardio, emphasize it more this week
-- If they did heavy lifting, suggest lighter volume or deload
-- If they missed days, keep the plan achievable
+- If they skipped cardio, emphasize it more
 - Always include at least 3 cardio sessions and 2-3 strength sessions
-- Always include 1 recovery/rest day
-- Emphasize heart health: zone 2 cardio, interval training, and consistent movement
+- Always include 1 recovery day
+- Emphasize heart health: zone 2 runs, tempo runs, and consistent effort
 
-Return a JSON array of 7 objects (Sunday first) with these fields:
+Return a JSON object with a "schedule" key containing an array of 7 objects (Sunday first):
 - day: "Sunday" through "Saturday"
-- type: short workout type (e.g., "Upper Body Strength", "Cardio — Run", "Active Recovery")
-- emoji: single emoji for the workout
-- focus: 3-5 word focus area
-- description: 1-2 sentence description of what to do
-- heartNote: 1 sentence about how this benefits heart health
+- type: short type (e.g., "Upper Body Push", "Tempo Run", "Active Recovery")
+- emoji: single emoji
+- focus: 3-5 word focus
+- exercises: array of strings, each being a specific exercise with sets/reps/distance/pace (e.g., "Barbell Bench Press: 4×8", "Run: 4 miles @ 8:30/mi pace, Zone 2", "Hamstring stretch: 3×30 sec hold")
+- duration: total estimated time (e.g., "55 min")
+- heartNote: 1 sentence about heart health benefit
 - intensity: "low", "moderate", or "high"
 
-Return ONLY the JSON array.`;
+Return ONLY the JSON object.`;
 
 export async function POST(request: NextRequest) {
   try {
